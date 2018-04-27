@@ -8,20 +8,33 @@ tokens = (
     'NAME','NUMBER',
     'PLUS','MINUS','TIMES','DIVIDE','EQUALS',
     'LPAREN','RPAREN','SEMICOLON'
+    'TRUE', 'FALSE',
+    'AND', 'OR', 'NOT',
+    'EQUALITY', 'INEQUALITY', 'LESS', 'MORE', 'LESS_OR_EQUAL', 'MORE_OR_EQUAL'
     )
 
 # Tokens
 
-
-t_PLUS    = r'\+'
-t_MINUS   = r'-'
-t_TIMES   = r'\*'
-t_DIVIDE  = r'/'
-t_EQUALS  = r'='
-t_LPAREN  = r'\('
-t_RPAREN  = r'\)'
-t_NAME    = r'[a-zA-Z_][a-zA-Z0-9_]*'
+t_PLUS = r'\+'
+t_MINUS = r'-'
+t_TIMES = r'\*'
+t_DIVIDE = r'/'
+t_EQUALS = r'='
+t_LPAREN = r'\('
+t_RPAREN = r'\)'
+t_NAME = r'[a-zA-Z_][a-zA-Z0-9_]*'
 t_SEMICOLON = r';'
+t_EQUALITY = r'=='
+t_INEQUALITY = r'!='
+t_LESS = r'<'
+t_MORE = r'>'
+t_LESS_OR_EQUAL = r'<='
+t_MORE_OR_EQUAL = r'>='
+t_TRUE = r'true'
+t_FALSE = r'false'
+t_AND = r'&&'
+t_OR = r'||'
+t_NOT = r'!'
 
 def t_NUMBER(t):
     r'\d+'
