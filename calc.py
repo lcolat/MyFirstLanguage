@@ -7,7 +7,7 @@
 tokens = (
     'NAME','NUMBER',
     'PLUS','MINUS','TIMES','DIVIDE','EQUALS',
-    'LPAREN','RPAREN','SEMICOLON'
+    'LPAREN','RPAREN','SEMICOLON',
     'TRUE', 'FALSE',
     'AND', 'OR', 'NOT',
     'EQUALITY', 'INEQUALITY', 'LESS', 'MORE', 'LESS_OR_EQUAL', 'MORE_OR_EQUAL'
@@ -33,7 +33,7 @@ t_MORE_OR_EQUAL = r'>='
 t_TRUE = r'true'
 t_FALSE = r'false'
 t_AND = r'&&'
-t_OR = r'||'
+t_OR = r'\|\|'
 t_NOT = r'!'
 
 def t_NUMBER(t):
@@ -76,9 +76,18 @@ def eval(t):
         elif op == '=':
             names[a] = eval(b)
             return names[a]
-    else:
+        elif op == '==': return eval(a) == eval(b)
+        elif op == '!=': return eval(a) != eval(b)
+        elif op == '>': return eval(a) > eval(b)
+        elif op == '<': return eval(a) < eval(b)
+        elif op == '>=': return eval(a) >= eval(b)
+        elif op == '<=': return eval(a) <= eval(b)
+    elif isinstance(t, str):
         if t in names: return names[t]
-        return t
+        elif t == 'true': return True
+        elif t == 'false': return False
+
+    return t
 
 def p_statement_expr(p):
     '''statement : statement expression SEMICOLON
@@ -90,12 +99,21 @@ def p_statement_expr(p):
         print(p[2])
         print(eval(p[2]))
 
+def p_expression_boolean(p):
+    '''expression : expression EQUALITY expression
+                  | expression INEQUALITY expression
+                  | expression LESS expression
+                  | expression MORE expression
+                  | expression LESS_OR_EQUAL expression
+                  | expression MORE_OR_EQUAL expression'''
+    if p[2] == '==': p[0] = ('==', p[1], p[3])
+
 def p_expression_binop(p):
     '''expression : expression PLUS expression
                   | expression MINUS expression
                   | expression TIMES expression
                   | expression DIVIDE expression'''
-    if p[2] == '+'  : p[0] = ('+',p[1],p[3])
+    if p[2] == '+': p[0] = ('+',p[1],p[3])
     elif p[2] == '-': p[0] = ('-',p[1],p[3])
     elif p[2] == '*': p[0] = ('*',p[1],p[3])
     elif p[2] == '/': p[0] = ('/',p[1],p[3])
