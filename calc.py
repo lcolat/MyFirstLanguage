@@ -1,13 +1,10 @@
-# -----------------------------------------------------------------------------
-# calc.py
-#
-# A simple calculator with variables.
-# -----------------------------------------------------------------------------
+import ply.yacc as yacc
+import ply.lex as lex
 
 tokens = (
-    'NAME','NUMBER',
-    'PLUS','MINUS','TIMES','DIVIDE','EQUALS',
-    'LPAREN','RPAREN','SEMICOLON',
+    'NAME', 'NUMBER',
+    'PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'EQUALS',
+    'LPAREN', 'RPAREN', 'SEMICOLON',
     'TRUE', 'FALSE',
     'AND', 'OR', 'NOT',
     'EQUALITY', 'INEQUALITY', 'LESS', 'MORE', 'LESS_OR_EQUAL', 'MORE_OR_EQUAL'
@@ -32,9 +29,10 @@ t_LESS_OR_EQUAL = r'<='
 t_MORE_OR_EQUAL = r'>='
 t_TRUE = r'true'
 t_FALSE = r'false'
-t_AND = r'&&'
+t_AND = r'\&\&'
 t_OR = r'\|\|'
 t_NOT = r'!'
+
 
 def t_NUMBER(t):
     r'\d+'
@@ -44,27 +42,29 @@ def t_NUMBER(t):
 # Ignored characters
 t_ignore = " \t"
 
+
 def t_newline(t):
     r'\n+'
     t.lexer.lineno += t.value.count("\n")
+
 
 def t_error(t):
     print("Illegal character '%s'" % t.value[0])
     t.lexer.skip(1)
 
 # Build the lexer
-import ply.lex as lex
 lex.lex()
 
 # Precedence rules for the arithmetic operators
 precedence = (
-    ('left','PLUS','MINUS'),
-    ('left','TIMES','DIVIDE'),
-    ('right','UMINUS')
-    )
+    ('left', 'PLUS', 'MINUS'),
+    ('left', 'TIMES', 'DIVIDE'),
+    ('right', 'UMINUS')
+)
 
 # dictionary of names (for storing variables)
-names = { }
+names = {}
+
 
 def eval(t):
     if type(t) == tuple:
@@ -82,6 +82,8 @@ def eval(t):
         elif op == '<': return eval(a) < eval(b)
         elif op == '>=': return eval(a) >= eval(b)
         elif op == '<=': return eval(a) <= eval(b)
+        elif op == '&&': return eval(a) and eval(b)
+        elif op == '||': return eval(a) or eval(b)
     elif isinstance(t, str):
         if t in names: return names[t]
         elif t == 'true': return True
@@ -89,9 +91,11 @@ def eval(t):
 
     return t
 
+
 def p_block(p):
     '''block : statement block
              | statement'''
+
 
 ''' ou assignement, ou if, ou while, ou for ... '''
 def p_statement_expr(p):
@@ -99,19 +103,25 @@ def p_statement_expr(p):
 
     print(p[1], eval(p[1]))
 
+
 def p_expression_boolean(p):
     '''expression : expression EQUALITY expression
                   | expression INEQUALITY expression
                   | expression LESS expression
                   | expression MORE expression
                   | expression LESS_OR_EQUAL expression
-                  | expression MORE_OR_EQUAL expression'''
+                  | expression MORE_OR_EQUAL expression
+                  | expression AND expression
+                  | expression OR expression'''
     if p[2] == '==': p[0] = ('==', p[1], p[3])
     elif p[2] == '!=': p[0] = ('!=', p[1], p[3])
     elif p[2] == '<': p[0] = ('<', p[1], p[3])
     elif p[2] == '>': p[0] = ('>', p[1], p[3])
     elif p[2] == '<=': p[0] = ('<=', p[1], p[3])
     elif p[2] == '>=': p[0] = ('>=', p[1], p[3])
+    elif p[2] == '&&': p[0] = ('&&', p[1], p[3])
+    elif p[2] == '||': p[0] = ('||', p[1], p[3])
+
 
 def p_expression_binop(p):
     '''expression : expression PLUS expression
@@ -123,21 +133,26 @@ def p_expression_binop(p):
     elif p[2] == '*': p[0] = ('*',p[1],p[3])
     elif p[2] == '/': p[0] = ('/',p[1],p[3])
 
+
 def p_statement_assign(p):
     'statement : NAME EQUALS expression SEMICOLON'
     p[0] = eval(('=',p[1],p[3]))
+
 
 def p_expression_uminus(p):
     'expression : MINUS expression %prec UMINUS'
     p[0] = -p[2]
 
+
 def p_expression_group(p):
     'expression : LPAREN expression RPAREN'
     p[0] = p[2]
 
+
 def p_expression_number(p):
     'expression : NUMBER'
     p[0] = p[1]
+
 
 def p_expression_name(p):
     'expression : NAME'
@@ -147,10 +162,11 @@ def p_expression_name(p):
         print("Undefined name '%s'" % p[1])
         p[0] = 0
 
+
 def p_error(p):
     print("Syntax error at '%s'" % p.value)
 
-import ply.yacc as yacc
+
 yacc.yacc()
 
 while True:
