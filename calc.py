@@ -54,24 +54,22 @@ precedence = (
 names = { }
 
 def eval(t):
-    print('eval')
     if type(t) == tuple:
-        op, a, b = t[0],t[1],t[2]
-        if op == '+'  : return (eval(a) + eval(b))
-        elif op == '-': return (eval(a) - eval(b))
-        elif op == '*': return (eval(a) * eval(b))
-        elif op == '/': return (eval(a) / eval(b))
+        op, a, b = t[0], t[1], t[2]
+        if op == '+': return eval(a) + eval(b)
+        elif op == '-': return eval(a) - eval(b)
+        elif op == '*': return eval(a) * eval(b)
+        elif op == '/': return eval(a) / eval(b)
         elif op == '=':
             names[a] = eval(b)
             return names[a]
     else:
-        print(t)
+        if t in names: return int(names[t])
         return t
 
 def p_statement_expr(p):
     '''statement : statement expression SEMICOLON
                  | expression SEMICOLON'''
-    print(2)
     if len(p) == 3:
         print(p[1])
         print(eval(p[1]))
@@ -84,7 +82,6 @@ def p_expression_binop(p):
                   | expression MINUS expression
                   | expression TIMES expression
                   | expression DIVIDE expression'''
-    print(3)
     if p[2] == '+'  : p[0] = ('+',p[1],p[3])
     elif p[2] == '-': p[0] = ('-',p[1],p[3])
     elif p[2] == '*': p[0] = ('*',p[1],p[3])
@@ -92,30 +89,22 @@ def p_expression_binop(p):
 
 def p_statement_assign(p):
     'statement : NAME EQUALS expression SEMICOLON'
-    print(1)
-    #print(p[0],p[1],p[2],p[3])
-    p[0] = ('=',p[1],p[3])
-    #print(p[0])
-    # names[p[1]] = p[3]
+    p[0] = eval(('=',p[1],p[3]))
 
 def p_expression_uminus(p):
     'expression : MINUS expression %prec UMINUS'
-    print(4)
     p[0] = -p[2]
 
 def p_expression_group(p):
     'expression : LPAREN expression RPAREN'
-    print(5)
     p[0] = p[2]
 
 def p_expression_number(p):
     'expression : NUMBER'
-    print(6)
     p[0] = p[1]
 
 def p_expression_name(p):
     'expression : NAME'
-    print(7)
     try:
         p[0] = p[1]
     except LookupError:
