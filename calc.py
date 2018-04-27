@@ -89,15 +89,15 @@ def eval(t):
 
     return t
 
+def p_block(p):
+    '''block : statement block
+             | statement'''
+
+''' ou assignement, ou if, ou while, ou for ... '''
 def p_statement_expr(p):
-    '''statement : statement expression SEMICOLON
-                 | expression SEMICOLON'''
-    if len(p) == 3:
-        print(p[1])
-        print(eval(p[1]))
-    elif len(p) == 4:
-        print(p[2])
-        print(eval(p[2]))
+    '''statement : expression SEMICOLON'''
+
+    print(p[1], eval(p[1]))
 
 def p_expression_boolean(p):
     '''expression : expression EQUALITY expression
