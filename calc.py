@@ -64,7 +64,7 @@ def eval(t):
             names[a] = eval(b)
             return names[a]
     else:
-        if t in names: return int(names[t])
+        if t in names: return names[t]
         return t
 
 def p_statement_expr(p):
