@@ -35,8 +35,8 @@ t_NOT = r'!'
 
 
 def t_NUMBER(t):
-    r'\d+'
-    t.value = int(t.value)
+    r'\d+\.?\d*'
+    t.value = float(t.value)
     return t
 
 # Ignored characters
