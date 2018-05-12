@@ -7,3 +7,6 @@ __pycache__
 /dist
 /build
 /*.egg-info
+# file: ~/.gitignore_global
+.DS_Store
+.idea
