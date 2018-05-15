@@ -69,10 +69,14 @@ names = {}
 def eval(t):
     if type(t) == tuple:
         op, a, b = t[0], t[1], t[2]
-        if op == '+': return eval(a) + eval(b)
-        elif op == '-': return eval(a) - eval(b)
-        elif op == '*': return eval(a) * eval(b)
-        elif op == '/': return eval(a) / eval(b)
+        if op == '+':
+            return eval(a) + eval(b)
+        elif op == '-':
+            return eval(a) - eval(b)
+        elif op == '*':
+            return eval(a) * eval(b)
+        elif op == '/':
+            return eval(a) / eval(b)
         elif op == '=':
             names[a] = eval(b)
             return names[a]
@@ -84,6 +88,12 @@ def eval(t):
         elif op == '<=': return eval(a) <= eval(b)
         elif op == '&&': return eval(a) and eval(b)
         elif op == '||': return eval(a) or eval(b)
+        elif op == 'block':
+            if b == 'empty':
+                return eval(a)
+            else:
+                eval(a)
+                return eval(b)
     elif isinstance(t, str):
         if t in names: return names[t]
         elif t == 'true': return True
@@ -93,13 +103,20 @@ def eval(t):
 
 
 def p_block(p):
-    """block : statement block
+    """block : block statement
              | statement"""
+    if len(p) == 3:
+        p[0] = ('block', p[1], p[2])
+    else:
+        p[0] = ('block', p[1], 'empty')
+
+    print(p[0], '=', eval(p[0]))
+
 
 
 def p_statement_expr(p):
     """statement : expression SEMICOLON"""
-    print(p[1], '=', eval(p[1]))
+    p[0] = p[1]
 
 
 def p_expression(p):
@@ -120,7 +137,7 @@ def p_expression(p):
 
 def p_statement_assign(p):
     """statement : NAME EQUALS expression SEMICOLON"""
-    p[0] = eval(('=',p[1],p[3]))
+    p[0] = ('=', p[1], p[3])
 
 
 def p_expression_uminus(p):
