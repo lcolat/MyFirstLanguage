@@ -93,19 +93,17 @@ def eval(t):
 
 
 def p_block(p):
-    '''block : statement block
-             | statement'''
+    """block : statement block
+             | statement"""
 
 
-''' ou assignement, ou if, ou while, ou for ... '''
 def p_statement_expr(p):
-    '''statement : expression SEMICOLON'''
-
-    print(p[1], eval(p[1]))
+    """statement : expression SEMICOLON"""
+    print(p[1], '=', eval(p[1]))
 
 
 def p_expression(p):
-    '''expression : expression EQUALITY expression
+    """expression : expression EQUALITY expression
                   | expression INEQUALITY expression
                   | expression LESS expression
                   | expression MORE expression
@@ -116,38 +114,37 @@ def p_expression(p):
                   | expression PLUS expression
                   | expression MINUS expression
                   | expression TIMES expression
-                  | expression DIVIDE expression'''
+                  | expression DIVIDE expression"""
     p[0] = (p[2], p[1], p[3])
 
 
 def p_statement_assign(p):
-    'statement : NAME EQUALS expression SEMICOLON'
+    """statement : NAME EQUALS expression SEMICOLON"""
     p[0] = eval(('=',p[1],p[3]))
 
 
 def p_expression_uminus(p):
-    'expression : MINUS expression %prec UMINUS'
+    """expression : MINUS expression %prec UMINUS"""
     p[0] = -p[2]
 
 
 def p_expression_group(p):
-    'expression : LPAREN expression RPAREN'
+    """expression : LPAREN expression RPAREN"""
     p[0] = p[2]
 
 
 def p_expression_number(p):
-    'expression : NUMBER'
+    """expression : NUMBER"""
     p[0] = p[1]
 
 
 def p_expression_name(p):
-    'expression : NAME'
+    """expression : NAME"""
     p[0] = p[1]
 
 
 def p_error(p):
     print("Syntax error at '%s'" % p.value)
-
 
 yacc.yacc()
 
