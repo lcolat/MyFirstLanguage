@@ -7,11 +7,13 @@ tokens = (
     'TRUE', 'FALSE',
     'AND', 'OR', 'NOT',
     'EQUALITY', 'INEQUALITY', 'LESS', 'MORE', 'LESS_OR_EQUAL', 'MORE_OR_EQUAL',
-    'MINUS', 'TIMES', 'EQUALS', 'DIVIDE', 'PLUS'
+    'MINUS', 'TIMES', 'EQUALS', 'DIVIDE', 'PLUS',
+    'IF'
     )
 
 # Tokens
 
+t_IF = r'if'
 t_PLUS = r'\+'
 t_MINUS = r'-'
 t_TIMES = r'\*'
@@ -62,7 +64,7 @@ precedence = (
     ('right', 'UMINUS')
 )
 
-# dictionary of names (for storing variables)
+# dictionary of names (for storing variables), should only be used in eval
 names = {}
 
 
