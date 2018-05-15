@@ -3,11 +3,11 @@ import ply.lex as lex
 
 tokens = (
     'NAME', 'NUMBER',
-    'PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'EQUALS',
     'LPAREN', 'RPAREN', 'SEMICOLON',
     'TRUE', 'FALSE',
     'AND', 'OR', 'NOT',
-    'EQUALITY', 'INEQUALITY', 'LESS', 'MORE', 'LESS_OR_EQUAL', 'MORE_OR_EQUAL'
+    'EQUALITY', 'INEQUALITY', 'LESS', 'MORE', 'LESS_OR_EQUAL', 'MORE_OR_EQUAL',
+    'MINUS', 'TIMES', 'EQUALS', 'DIVIDE', 'PLUS'
     )
 
 # Tokens
@@ -22,7 +22,7 @@ t_RPAREN = r'\)'
 t_NAME = r'[a-zA-Z_][a-zA-Z0-9_]*'
 t_SEMICOLON = r';'
 t_EQUALITY = r'=='
-t_INEQUALITY = r'!='
+t_INEQUALITY = r'\!='
 t_LESS = r'<'
 t_MORE = r'>'
 t_LESS_OR_EQUAL = r'<='
@@ -31,7 +31,7 @@ t_TRUE = r'true'
 t_FALSE = r'false'
 t_AND = r'\&\&'
 t_OR = r'\|\|'
-t_NOT = r'!'
+t_NOT = r'\!'
 
 
 def t_NUMBER(t):
@@ -112,26 +112,12 @@ def p_expression_boolean(p):
                   | expression LESS_OR_EQUAL expression
                   | expression MORE_OR_EQUAL expression
                   | expression AND expression
-                  | expression OR expression'''
-    if p[2] == '==': p[0] = ('==', p[1], p[3])
-    elif p[2] == '!=': p[0] = ('!=', p[1], p[3])
-    elif p[2] == '<': p[0] = ('<', p[1], p[3])
-    elif p[2] == '>': p[0] = ('>', p[1], p[3])
-    elif p[2] == '<=': p[0] = ('<=', p[1], p[3])
-    elif p[2] == '>=': p[0] = ('>=', p[1], p[3])
-    elif p[2] == '&&': p[0] = ('&&', p[1], p[3])
-    elif p[2] == '||': p[0] = ('||', p[1], p[3])
-
-
-def p_expression_binop(p):
-    '''expression : expression PLUS expression
+                  | expression OR expression
+                  | expression PLUS expression
                   | expression MINUS expression
                   | expression TIMES expression
                   | expression DIVIDE expression'''
-    if p[2] == '+': p[0] = ('+',p[1],p[3])
-    elif p[2] == '-': p[0] = ('-',p[1],p[3])
-    elif p[2] == '*': p[0] = ('*',p[1],p[3])
-    elif p[2] == '/': p[0] = ('/',p[1],p[3])
+    p[0] = (p[2], p[1], p[3])
 
 
 def p_statement_assign(p):
@@ -156,11 +142,7 @@ def p_expression_number(p):
 
 def p_expression_name(p):
     'expression : NAME'
-    try:
-        p[0] = p[1]
-    except LookupError:
-        print("Undefined name '%s'" % p[1])
-        p[0] = 0
+    p[0] = p[1]
 
 
 def p_error(p):
