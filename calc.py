@@ -104,7 +104,7 @@ def p_statement_expr(p):
     print(p[1], eval(p[1]))
 
 
-def p_expression_boolean(p):
+def p_expression(p):
     '''expression : expression EQUALITY expression
                   | expression INEQUALITY expression
                   | expression LESS expression
