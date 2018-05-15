@@ -89,11 +89,8 @@ def eval(t):
         elif op == '&&': return eval(a) and eval(b)
         elif op == '||': return eval(a) or eval(b)
         elif op == 'block':
-            if b == 'empty':
-                return eval(a)
-            else:
-                eval(a)
-                return eval(b)
+            eval(a)
+            return eval(b)
     elif isinstance(t, str):
         if t in names: return names[t]
         elif t == 'true': return True
@@ -108,7 +105,7 @@ def p_block(p):
     if len(p) == 3:
         p[0] = ('block', p[1], p[2])
     else:
-        p[0] = ('block', p[1], 'empty')
+        p[0] = eval(p[1])
 
     print(p[0], '=', eval(p[0]))
 
