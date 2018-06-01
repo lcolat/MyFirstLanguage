@@ -1,15 +1,23 @@
 import ply.yacc as yacc
 import ply.lex as lex
 
-tokens = (
+reserved = {
+    'if': 'IF',
+    'then': 'THEN',
+    'else': 'ELSE',
+    'while': 'WHILE',
+    'for': 'FOR',
+    'echo': 'ECHO'
+}
+
+tokens = [
     'NAME', 'NUMBER',
     'LPAREN', 'RPAREN', 'SEMICOLON',
     'TRUE', 'FALSE',
     'AND', 'OR', 'NOT',
     'EQUALITY', 'INEQUALITY', 'LESS', 'MORE', 'LESS_OR_EQUAL', 'MORE_OR_EQUAL',
-    'MINUS', 'TIMES', 'EQUALS', 'DIVIDE', 'PLUS',
-    'IF'
-    )
+    'MINUS', 'TIMES', 'EQUALS', 'DIVIDE', 'PLUS'
+    ] + list(reserved.values())
 
 # Tokens
 
@@ -138,6 +146,9 @@ def p_statement_assign(p):
     """statement : NAME EQUALS expression SEMICOLON"""
     p[0] = ('=', p[1], p[3])
 
+def p_statement_echo(p):
+    """statement : ECHO expression SEMICOLON"""
+    p[0] = ('echo', p[2])
 
 def p_expression_uminus(p):
     """expression : MINUS expression %prec UMINUS"""
