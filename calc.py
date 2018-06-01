@@ -7,21 +7,22 @@ reserved = {
     'else': 'ELSE',
     'while': 'WHILE',
     'for': 'FOR',
-    'echo': 'ECHO'
+    'echo': 'ECHO',
+    'true': 'TRUE',
+    'false': 'FALSE'
 }
 
 tokens = [
     'NAME', 'NUMBER',
     'LPAREN', 'RPAREN', 'SEMICOLON',
-    'TRUE', 'FALSE',
     'AND', 'OR', 'NOT',
     'EQUALITY', 'INEQUALITY', 'LESS', 'MORE', 'LESS_OR_EQUAL', 'MORE_OR_EQUAL',
-    'MINUS', 'TIMES', 'EQUALS', 'DIVIDE', 'PLUS'
+    'MINUS', 'TIMES', 'EQUALS', 'DIVIDE', 'PLUS',
+    'ID'
     ] + list(reserved.values())
 
 # Tokens
 
-t_IF = r'if'
 t_PLUS = r'\+'
 t_MINUS = r'-'
 t_TIMES = r'\*'
@@ -42,6 +43,13 @@ t_FALSE = r'false'
 t_AND = r'\&\&'
 t_OR = r'\|\|'
 t_NOT = r'\!'
+
+
+def t_ID(t):
+    r'[a-zA-Z_][a-zA-Z0-9_]'
+    if t.value in reserved:
+        t.type = reserved[t.value]
+    return t
 
 
 def t_NUMBER(t):
@@ -76,31 +84,44 @@ precedence = (
 names = {}
 
 
+def eval_keyword(keyword, data):
+    if keyword == 'echo':
+        print(str(eval(data)))
+
+
+def eval_expression(op, a, b):
+    print(op, a, b)
+    if op == '+':
+        return eval(a) + eval(b)
+    elif op == '-':
+        return eval(a) - eval(b)
+    elif op == '*':
+        return eval(a) * eval(b)
+    elif op == '/':
+        return eval(a) / eval(b)
+    elif op == '=':
+        names[a] = eval(b)
+        return names[a]
+    elif op == '==': return eval(a) == eval(b)
+    elif op == '!=': return eval(a) != eval(b)
+    elif op == '>': return eval(a) > eval(b)
+    elif op == '<': return eval(a) < eval(b)
+    elif op == '>=': return eval(a) >= eval(b)
+    elif op == '<=': return eval(a) <= eval(b)
+    elif op == '&&': return eval(a) and eval(b)
+    elif op == '||': return eval(a) or eval(b)
+    elif op == 'block':
+        eval(a)
+        eval(b)
+        return
+
+
 def eval(t):
     if type(t) == tuple:
-        op, a, b = t[0], t[1], t[2]
-        if op == '+':
-            return eval(a) + eval(b)
-        elif op == '-':
-            return eval(a) - eval(b)
-        elif op == '*':
-            return eval(a) * eval(b)
-        elif op == '/':
-            return eval(a) / eval(b)
-        elif op == '=':
-            names[a] = eval(b)
-            return names[a]
-        elif op == '==': return eval(a) == eval(b)
-        elif op == '!=': return eval(a) != eval(b)
-        elif op == '>': return eval(a) > eval(b)
-        elif op == '<': return eval(a) < eval(b)
-        elif op == '>=': return eval(a) >= eval(b)
-        elif op == '<=': return eval(a) <= eval(b)
-        elif op == '&&': return eval(a) and eval(b)
-        elif op == '||': return eval(a) or eval(b)
-        elif op == 'block':
-            eval(a)
-            return eval(b)
+        if len(t) == 3:
+            return eval_expression(t[0], t[1], t[2])
+        elif len(t) == 2:
+            return eval_keyword(t[0], t[1])
     elif isinstance(t, str):
         if t in names: return names[t]
         elif t == 'true': return True
@@ -117,8 +138,7 @@ def p_block(p):
     else:
         p[0] = eval(p[1])
 
-    print(p[0], '=', eval(p[0]))
-
+    print('DEBUG', p[0], '=', p[0])
 
 
 def p_statement_expr(p):
@@ -146,9 +166,11 @@ def p_statement_assign(p):
     """statement : NAME EQUALS expression SEMICOLON"""
     p[0] = ('=', p[1], p[3])
 
+
 def p_statement_echo(p):
     """statement : ECHO expression SEMICOLON"""
     p[0] = ('echo', p[2])
+
 
 def p_expression_uminus(p):
     """expression : MINUS expression %prec UMINUS"""
