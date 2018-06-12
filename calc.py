@@ -2,60 +2,26 @@ import ply.yacc as yacc
 import ply.lex as lex
 
 reserved = {
-    'if': 'IF',
-    'then': 'THEN',
-    'else': 'ELSE',
-    'while': 'WHILE',
-    'for': 'FOR',
     'echo': 'ECHO',
-    'true': 'TRUE',
-    'false': 'FALSE'
 }
 
-tokens = [
+tokens = (
+    # Literals
     'NAME', 'NUMBER',
-    'LPAREN', 'RPAREN', 'SEMICOLON',
-    'AND', 'OR', 'NOT',
-    'EQUALITY', 'INEQUALITY', 'LESS', 'MORE', 'LESS_OR_EQUAL', 'MORE_OR_EQUAL',
-    'MINUS', 'TIMES', 'EQUALS', 'DIVIDE', 'PLUS',
-    'ID'
-    ] + list(reserved.values())
 
-# Tokens
+    # Operators
+    'PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'MOD',  # +, -, *, /, %
+    'OR', 'AND', 'XOR', 'LSHIFT', 'RSHIFT',     # |, &, ^, <<, >>
+    'LOR', 'LAND',                              # ||, &&
+    'LT', 'LE', 'GT', 'GE', 'EQ', 'NE',         # <, <=, >, >=, ==, !=
 
-t_PLUS = r'\+'
-t_MINUS = r'-'
-t_TIMES = r'\*'
-t_DIVIDE = r'/'
-t_EQUALS = r'='
-t_LPAREN = r'\('
-t_RPAREN = r'\)'
-t_NAME = r'[a-zA-Z_][a-zA-Z0-9_]*'
-t_SEMICOLON = r';'
-t_EQUALITY = r'=='
-t_INEQUALITY = r'\!='
-t_LESS = r'<'
-t_MORE = r'>'
-t_LESS_OR_EQUAL = r'<='
-t_MORE_OR_EQUAL = r'>='
-t_TRUE = r'true'
-t_FALSE = r'false'
-t_AND = r'\&\&'
-t_OR = r'\|\|'
-t_NOT = r'\!'
+    # Assignment
+    'EQUALS', 'TIMESEQUAL', 'DIVEQUAL', 'MODEQUAL', 'PLUSEQUAL', 'MINUSEQUAL',  # =, *=, /=, %=, +=, -=
+    'LSHIFTEQUAL', 'RSHIFTEQUAL', 'ANDEQUAL', 'XOREQUAL', 'OREQUAL',  # <<=, >>=, &=, ^=, |=
 
-
-def t_ID(t):
-    r'[a-zA-Z_][a-zA-Z0-9_]'
-    if t.value in reserved:
-        t.type = reserved[t.value]
-    return t
-
-
-def t_NUMBER(t):
-    r'\d+\.?\d*'
-    t.value = float(t.value)
-    return t
+    # Delimiters
+    'LPAREN', 'RPAREN', 'SEMICOLON',  # (, ), ;
+) + tuple(reserved.values())
 
 # Ignored characters
 t_ignore = " \t"
@@ -66,8 +32,66 @@ def t_newline(t):
     t.lexer.lineno += t.value.count("\n")
 
 
+# Operators
+t_PLUS = r'\+'
+t_MINUS = r'-'
+t_TIMES = r'\*'
+t_DIVIDE = r'/'
+t_MOD = r'%'
+t_OR = r'\|'
+t_AND = r'&'
+t_XOR = r'\^'
+t_LSHIFT = r'<<'
+t_RSHIFT = r'>>'
+t_LOR = r'\|\|'
+t_LAND = r'&&'
+t_LT = r'<'
+t_GT = r'>'
+t_LE = r'<='
+t_GE = r'>='
+t_EQ = r'=='
+t_NE = r'!='
+
+
+# Assignment operators
+t_EQUALS = r'='
+t_TIMESEQUAL = r'\*='
+t_DIVEQUAL = r'/='
+t_MODEQUAL = r'%='
+t_PLUSEQUAL = r'\+='
+t_MINUSEQUAL = r'-='
+t_LSHIFTEQUAL = r'<<='
+t_RSHIFTEQUAL = r'>>='
+t_ANDEQUAL = r'&='
+t_OREQUAL = r'\|='
+t_XOREQUAL = r'\^='
+
+
+# Delimeters
+t_LPAREN = r'\('
+t_RPAREN = r'\)'
+t_SEMICOLON = r';'
+
+
+def t_NAME(t):
+    r'[A-Za-z_][\w_]*'
+    t.type = reserved.get(t.value, "NAME")
+    return t
+
+
+def t_comment(t):
+    r'\#.*'
+    t.lexer.lineno += t.value.count('\n')
+
+
+def t_NUMBER(t):
+    r'\d+\.?\d*'
+    t.value = float(t.value)
+    return t
+
+
 def t_error(t):
-    print("Illegal character '%s'" % t.value[0])
+    print("Illegal character %s" % repr(t.value[0]))
     t.lexer.skip(1)
 
 # Build the lexer
@@ -84,48 +108,93 @@ precedence = (
 names = {}
 
 
-def eval_keyword(keyword, data):
-    if keyword == 'echo':
-        print(str(eval(data)))
+def eval_expression(t):
+    expression_len = len(t)
 
+    if expression_len == 3:
+        op, a, b = t[0], t[1], t[2]
 
-def eval_expression(op, a, b):
-    print(op, a, b)
-    if op == '+':
-        return eval(a) + eval(b)
-    elif op == '-':
-        return eval(a) - eval(b)
-    elif op == '*':
-        return eval(a) * eval(b)
-    elif op == '/':
-        return eval(a) / eval(b)
-    elif op == '=':
-        names[a] = eval(b)
-        return names[a]
-    elif op == '==': return eval(a) == eval(b)
-    elif op == '!=': return eval(a) != eval(b)
-    elif op == '>': return eval(a) > eval(b)
-    elif op == '<': return eval(a) < eval(b)
-    elif op == '>=': return eval(a) >= eval(b)
-    elif op == '<=': return eval(a) <= eval(b)
-    elif op == '&&': return eval(a) and eval(b)
-    elif op == '||': return eval(a) or eval(b)
-    elif op == 'block':
-        eval(a)
-        eval(b)
-        return
+        # Evaluation
+        if op == '+':
+            return eval(a) + eval(b)
+        elif op == '-':
+            return eval(a) - eval(b)
+        elif op == '*':
+            return eval(a) * eval(b)
+        elif op == '/':
+            return eval(a) / eval(b)
+        elif op == '%':
+            return eval(a) % eval(b)
+        elif op == '|':
+            return eval(a) | eval(b)
+        elif op == '&':
+            return eval(a) & eval(b)
+        elif op == '^':
+            return eval(a) ^ eval(b)
+        elif op == '<<':
+            return eval(a) << eval(b)
+        elif op == '>>':
+            return eval(a) >> eval(b)
+        elif op == '&&':
+            return eval(a) and eval(b)
+        elif op == '||':
+            return eval(a) or eval(b)
+        elif op == '<':
+            return eval(a) < eval(b)
+        elif op == '<=':
+            return eval(a) <= eval(b)
+        elif op == '>':
+            return eval(a) > eval(b)
+        elif op == '>=':
+            return eval(a) >= eval(b)
+        elif op == '==':
+            return eval(a) == eval(b)
+        elif op == '!=':
+            return eval(a) != eval(b)
+
+        # Assignment
+        elif op == '<<=':
+            names[a] <<= eval(b)
+        elif op == '>>=':
+            names[a] >>= eval(b)
+        elif op == '&=':
+            names[a] &= eval(b)
+        elif op == '^=':
+            names[a] ^= eval(b)
+        elif op == '|=':
+            names[a] |= eval(b)
+        elif op == '*=':
+            names[a] *= eval(b)
+        elif op == '/=':
+            names[a] /= eval(b)
+        elif op == '%=':
+            names[a] %= eval(b)
+        elif op == '+=':
+            names[a] += eval(b)
+        elif op == '-=':
+            names[a] -= eval(b)
+        elif op == '=':
+            names[a] = eval(b)
+
+        # Block
+        elif op == 'block':
+            eval(a)
+            eval(b)
+
+    elif expression_len == 2:
+        a, b = t[0], t[1]
+
+        if a == 'echo':
+            print(eval(b))
 
 
 def eval(t):
     if type(t) == tuple:
-        if len(t) == 3:
-            return eval_expression(t[0], t[1], t[2])
-        elif len(t) == 2:
-            return eval_keyword(t[0], t[1])
+        return eval_expression(t)
     elif isinstance(t, str):
         if t in names: return names[t]
-        elif t == 'true': return True
-        elif t == 'false': return False
+        elif t == 'TRUE': return True
+        elif t == 'FALSE': return False
 
     return t
 
@@ -136,9 +205,9 @@ def p_block(p):
     if len(p) == 3:
         p[0] = ('block', p[1], p[2])
     else:
-        p[0] = eval(p[1])
+        p[0] = p[1]
 
-    print('DEBUG', p[0], '=', p[0])
+    eval(p[0])
 
 
 def p_statement_expr(p):
@@ -147,24 +216,41 @@ def p_statement_expr(p):
 
 
 def p_expression(p):
-    """expression : expression EQUALITY expression
-                  | expression INEQUALITY expression
-                  | expression LESS expression
-                  | expression MORE expression
-                  | expression LESS_OR_EQUAL expression
-                  | expression MORE_OR_EQUAL expression
-                  | expression AND expression
-                  | expression OR expression
-                  | expression PLUS expression
+    """expression : expression PLUS expression
                   | expression MINUS expression
                   | expression TIMES expression
-                  | expression DIVIDE expression"""
+                  | expression DIVIDE expression
+                  | expression MOD expression
+                  | expression OR expression
+                  | expression AND expression
+                  | expression XOR expression
+                  | expression LSHIFT expression
+                  | expression RSHIFT expression
+                  | expression LOR expression
+                  | expression LAND expression
+                  | expression LT expression
+                  | expression LE expression
+                  | expression GT expression
+                  | expression GE expression
+                  | expression EQ expression
+                  | expression NE expression
+                  """
     p[0] = (p[2], p[1], p[3])
 
 
 def p_statement_assign(p):
-    """statement : NAME EQUALS expression SEMICOLON"""
-    p[0] = ('=', p[1], p[3])
+    """statement : NAME EQUALS expression SEMICOLON
+                 | NAME TIMESEQUAL expression SEMICOLON
+                 | NAME DIVEQUAL expression SEMICOLON
+                 | NAME MODEQUAL expression SEMICOLON
+                 | NAME PLUSEQUAL expression SEMICOLON
+                 | NAME MINUSEQUAL expression SEMICOLON
+                 | NAME LSHIFTEQUAL expression SEMICOLON
+                 | NAME RSHIFTEQUAL expression SEMICOLON
+                 | NAME ANDEQUAL expression SEMICOLON
+                 | NAME OREQUAL expression SEMICOLON
+                 | NAME XOREQUAL expression SEMICOLON"""
+    p[0] = (p[2], p[1], p[3])
 
 
 def p_statement_echo(p):
@@ -193,13 +279,13 @@ def p_expression_name(p):
 
 
 def p_error(p):
-    print("Syntax error at '%s'" % p.value)
+    if hasattr(p, 'value'):
+        print('Syntax error at %s' % p.value, str(p))
+    else:
+        print('Error :', p)
 
 yacc.yacc()
 
-while True:
-    try:
-        s = input('calc > ')   # use input() on Python 3
-    except EOFError:
-        break
-    yacc.parse(s)
+with open('code.pypy') as file:
+    for line in file:
+        yacc.parse(line)
