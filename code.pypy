@@ -1,2 +1,13 @@
-a=1;
-echo a;
+# b 5
+
+a = 1;
+echo __names;
+echo __preprocessor;
+
+while a != 15 then a +=1; echo a;
+
+echo 'finish with a' + ' concat ' + '15';
+
+echo 'il reste à faire les if, else if, else';
+echo 'print dans graphviz !'
+echo 'et des trucs fun';
