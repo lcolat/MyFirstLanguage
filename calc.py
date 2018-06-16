@@ -6,6 +6,7 @@ reserved = {
     'while': 'WHILE',
     'for': 'FOR',
     'then': 'THEN',
+    'function': 'FUNCTION'
 }
 
 operators = {
@@ -48,10 +49,11 @@ delimiters = {
     ')': 'RPAREN',
     ';': 'SEMICOLON',
     '#': 'SHARP',
+    ',': 'COMMA',
 }
 
 others = (
-    'NAME', 'NUMBER', 'STRING'
+    'NAME', 'NUMBER', 'STRING',
 )
 
 tokens = others +\
@@ -109,6 +111,7 @@ t_LPAREN = r'\('
 t_RPAREN = r'\)'
 t_SEMICOLON = r';'
 t_SHARP = r'\#'
+t_COMMA = r','
 
 
 def t_NAME(t):
@@ -146,12 +149,15 @@ precedence = (
 # dictionary of names (for storing variables), should only be used in eval
 names = {}
 preprocessor = {}
+functions = {}
 
 
 def eval_op(t):
     op, a, b = t[0], t[1], t[2]
 
     if op == '+':
+        if isinstance(a, str):
+            return eval(a) + str(eval(b))
         return eval(a) + eval(b)
     elif op == '-':
         return eval(a) - eval(b)
@@ -254,6 +260,34 @@ def eval_expression(t):
     elif op == 'preprocessor':
         preprocessor[t[1]] = t[2]
 
+    elif op == 'declare_function':
+        functions[t[1]] = t[2]
+
+    elif op == 'exec_function':
+        return eval(functions[t[1]])
+
+"""
+        names_to_reset = {}
+
+        i = 0
+        for param in func_param:
+            if param in names:
+                names_to_reset[param] = names[param]
+
+            try:
+                names[param] = eval(func_param[i])
+            except:
+                names[param] = None
+            finally:
+                i += 1
+        
+        res = eval(func_block)
+        
+        # Reset the context
+        for param in names_to_reset:
+            names[param] = names_to_reset[param]
+"""
+
 
 def eval(t):
     if type(t) == tuple:
@@ -308,33 +342,23 @@ def p_statement_for(p):
     """statement : FOR statement SEMICOLON expression THEN block"""
     p[0] = ('for', p[2], p[4], p[6])
 
-'''
-def p_statement_else(p):
-    """
-    statement : ELSE expression
-                   | ELSE statement_if
-                   | empty
-    """
-
-    p[0] = ('else', p[1])
+#  FAIRE LES IF ELIF ELSE SUR UNE SEULE LIGNE == PLUS SIMPLE
 
 
-def p_statement_then(p):
-    """
-    statement : THEN statement_if
-                   | THEN  expression
-    """
-    p[0] = ('then', p[1])
+def p_parameters(p):
+    """parameters : NAME COMMA parameters
+                  | NAME"""
+    p[0] = p[1]
 
 
-def p_statement_if(p):
-    """
-    statement : IF LPAREN expression RPAREN statement_then statement_else ENDIF
-    """
+def p_statement_function_declaration(p):
+    """statement : FUNCTION NAME LPAREN RPAREN block"""
+    p[0] = ('declare_function', p[2], p[5])
 
-    print(1, p)
-    p[0] = ('if', p[3], p[5], p[6])
-'''
+
+def p_statement_function_execution(p):
+    """statement : NAME LPAREN  RPAREN SEMICOLON"""
+    p[0] = ('exec_function', p[1])
 
 
 def p_statement_expr(p):
@@ -406,7 +430,7 @@ def p_expression_name(p):
 
 def p_error(p):
     if p is not None:
-        print("Erreur de syntaxe à la ligne %s" % (p.lineno))
+        print("Erreur de syntaxe à la ligne %s" % p.lineno, p)
 
 parser = yacc.yacc()
 
