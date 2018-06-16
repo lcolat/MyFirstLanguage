@@ -5,17 +5,23 @@ echo __names;
 echo __preprocessor;
 
 while a != 5 then a +=1; echo a;
+echo 'finish with a' + ' concat ' + 15;
 
-echo 'finish with a' + ' concat ' + '15';
-
-echo 'il reste à faire les if, else if, else';
-echo 'print dans graphviz !'
-echo 'et des trucs fun';
+echo 'boolean check ' + ((a == 5) && (true != false));
 
 compteur = 0;
+function printAndIncrementCompteur[] echo 'compteur = ' + compteur; compteur += 1;
+printAndIncrementCompteur[];
+printAndIncrementCompteur[];
 
-function superFunction() echo 'compteur = ' + compteur; compteur += 1;
+a = 500
 
-superFunction();
+function superFunction[a, b, c] echo 'a = ' + a; echo 'b = ' + b; echo 'c = ' + c;
 
-superFunction();
+superFunction[1, 2, 3];
+
+echo 'a outter scope = ' + a;
+echo 'b outter scope = ' + b;
+echo c;
+
+superFunction[6, 7, 8];

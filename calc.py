@@ -50,6 +50,8 @@ delimiters = {
     ';': 'SEMICOLON',
     '#': 'SHARP',
     ',': 'COMMA',
+    '[': 'LBRACKET',
+    ']': 'RBRACKET',
 }
 
 others = (
@@ -112,6 +114,8 @@ t_RPAREN = r'\)'
 t_SEMICOLON = r';'
 t_SHARP = r'\#'
 t_COMMA = r','
+t_LBRACKET = r'\['
+t_RBRACKET = r'\]'
 
 
 def t_NAME(t):
@@ -153,73 +157,76 @@ functions = {}
 
 
 def eval_op(t):
-    op, a, b = t[0], t[1], t[2]
+    op, a, b = t[0], eval(t[1]), eval(t[2])
 
     if op == '+':
         if isinstance(a, str):
-            return eval(a) + str(eval(b))
-        return eval(a) + eval(b)
+            return a + str(b)
+        elif isinstance(b, str):
+            return str(a) + b
+
+        return a + b
     elif op == '-':
-        return eval(a) - eval(b)
+        return a - b
     elif op == '*':
-        return eval(a) * eval(b)
+        return a * b
     elif op == '/':
-        return eval(a) / eval(b)
+        return a / b
     elif op == '%':
-        return eval(a) % eval(b)
+        return a % b
     elif op == '|':
-        return eval(a) | eval(b)
+        return a | b
     elif op == '&':
-        return eval(a) & eval(b)
+        return a & b
     elif op == '^':
-        return eval(a) ^ eval(b)
+        return a ^ b
     elif op == '<<':
-        return eval(a) << eval(b)
+        return a << b
     elif op == '>>':
-        return eval(a) >> eval(b)
+        return a >> b
     elif op == '&&':
-        return eval(a) and eval(b)
+        return a and b
     elif op == '||':
-        return eval(a) or eval(b)
+        return a or b
     elif op == '<':
-        return eval(a) < eval(b)
+        return a < b
     elif op == '<=':
-        return eval(a) <= eval(b)
+        return a <= b
     elif op == '>':
-        return eval(a) > eval(b)
+        return a > b
     elif op == '>=':
-        return eval(a) >= eval(b)
+        return a >= b
     elif op == '==':
-        return eval(a) == eval(b)
+        return a == b
     elif op == '!=':
-        return eval(a) != eval(b)
+        return a != b
 
 
 def eval_assignment(t):
-    op, a, b = t[0], t[1], t[2]
+    op, a, b = t[0], t[1], eval(t[2])
 
     if op == '<<=':
-        names[a] <<= eval(b)
+        names[a] <<= b
     elif op == '>>=':
-        names[a] >>= eval(b)
+        names[a] >>= b
     elif op == '&=':
-        names[a] &= eval(b)
+        names[a] &= b
     elif op == '^=':
-        names[a] ^= eval(b)
+        names[a] ^= b
     elif op == '|=':
-        names[a] |= eval(b)
+        names[a] |= b
     elif op == '*=':
-        names[a] *= eval(b)
+        names[a] *= b
     elif op == '/=':
-        names[a] /= eval(b)
+        names[a] /= b
     elif op == '%=':
-        names[a] %= eval(b)
+        names[a] %= b
     elif op == '+=':
-        names[a] += eval(b)
+        names[a] += b
     elif op == '-=':
-        names[a] -= eval(b)
+        names[a] -= b
     elif op == '=':
-        names[a] = eval(b)
+        names[a] = b
 
 
 def eval_expression(t):
@@ -227,10 +234,11 @@ def eval_expression(t):
     assigns = assignment.keys()
 
     for el in t:
-        if el in ops:
-            return eval_op(t)
-        if el in assigns:
-            return eval_assignment(t)
+        if isinstance(el, str):
+            if el in ops:
+                return eval_op(t)
+            if el in assigns:
+                return eval_assignment(t)
 
     op = t[0]
 
@@ -261,32 +269,40 @@ def eval_expression(t):
         preprocessor[t[1]] = t[2]
 
     elif op == 'declare_function':
-        functions[t[1]] = t[2]
+        functions[t[1]] = (t[2], t[3])
 
     elif op == 'exec_function':
-        return eval(functions[t[1]])
+        if t[1] in functions:
+            func = functions[t[1]]
+            func_params, func_block = func[0], func[1]
 
-"""
-        names_to_reset = {}
+            names_to_reset = {}
 
-        i = 0
-        for param in func_param:
-            if param in names:
-                names_to_reset[param] = names[param]
+            i = 0
+            for param in func_params:
+                if param in names:
+                    names_to_reset[param] = names[param]
 
-            try:
-                names[param] = eval(func_param[i])
-            except:
-                names[param] = None
-            finally:
-                i += 1
-        
-        res = eval(func_block)
-        
-        # Reset the context
-        for param in names_to_reset:
-            names[param] = names_to_reset[param]
-"""
+                try:
+                    names[param] = eval(t[2][i])
+                except:
+                    names[param] = None
+                finally:
+                    i += 1
+
+            res = eval(func_block)
+
+            # Reset the context
+            for param in names_to_reset:
+                names[param] = names_to_reset[param]
+
+            for param in func_params:
+                del names[param]
+
+            return res
+        else:
+            # TODO : Error handling
+            return None
 
 
 def eval(t):
@@ -323,6 +339,11 @@ def p_block(p):
         p[0] = p[1]
 
 
+def p_empty(p):
+    'empty :'
+    pass
+
+
 def p_preprocessor(p):
     """statement : SHARP NAME expression"""
     p[0] = ('preprocessor', p[2], p[3])
@@ -345,20 +366,40 @@ def p_statement_for(p):
 #  FAIRE LES IF ELIF ELSE SUR UNE SEULE LIGNE == PLUS SIMPLE
 
 
-def p_parameters(p):
-    """parameters : NAME COMMA parameters
-                  | NAME"""
-    p[0] = p[1]
+def p_parameters_declaration(p):
+    """parameters_declaration : empty
+                              | NAME COMMA parameters_declaration
+                              | NAME"""
+
+    if len(p) == 4:
+        p[0] = [p[1]] + p[3]
+    elif p[1] is not None:
+        p[0] = [p[1]]
+    else:
+        p[0] = []
+
+
+def p_parameters_execution(p):
+    """parameters_execution : empty
+                              | expression COMMA parameters_execution
+                              | expression"""
+
+    if len(p) == 4:
+        p[0] = [p[1]] + p[3]
+    elif p[1] is not None:
+        p[0] = [p[1]]
+    else:
+        p[0] = []
 
 
 def p_statement_function_declaration(p):
-    """statement : FUNCTION NAME LPAREN RPAREN block"""
-    p[0] = ('declare_function', p[2], p[5])
+    """statement : FUNCTION NAME LBRACKET parameters_declaration RBRACKET block"""
+    p[0] = ('declare_function', p[2], p[4], p[6])
 
 
 def p_statement_function_execution(p):
-    """statement : NAME LPAREN  RPAREN SEMICOLON"""
-    p[0] = ('exec_function', p[1])
+    """statement : NAME LBRACKET parameters_execution RBRACKET SEMICOLON"""
+    p[0] = ('exec_function', p[1], p[3])
 
 
 def p_statement_expr(p):
@@ -431,6 +472,7 @@ def p_expression_name(p):
 def p_error(p):
     if p is not None:
         print("Erreur de syntaxe à la ligne %s" % p.lineno, p)
+
 
 parser = yacc.yacc()
 
