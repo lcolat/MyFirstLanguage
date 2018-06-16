@@ -6,6 +6,9 @@ reserved = {
     'while': 'WHILE',
     'for': 'FOR',
     'then': 'THEN',
+    'if': 'IF',
+    'elif': 'ELIF',
+    'else': 'ELSE',
     'function': 'FUNCTION'
 }
 
@@ -249,6 +252,12 @@ def eval_expression(t):
         for i in range(start, eval(t[2])):
             eval(t[3])
 
+    elif op == 'if':
+        if eval(t[1]):
+            eval(t[2])
+        elif len(t) == 5:
+            eval(t[4])
+
     elif op == 'echo':
         if t[1] == '__names':
             print('__names', str(names))
@@ -315,6 +324,7 @@ def p_program(p):
 
 def p_block(p):
     """block : block statement
+
              | statement"""
 
     if len(p) == 3:
@@ -343,7 +353,13 @@ def p_statement_for(p):
     p[0] = ('for', p[2], p[4], p[6])
 
 #  FAIRE LES IF ELIF ELSE SUR UNE SEULE LIGNE == PLUS SIMPLE
-
+def p_statement_if(p):
+    """statement : IF expression THEN block ELSE block
+                 | IF expression THEN block"""
+    if len(p) == 7:
+        p[0] = ('if', p[2], p[4], 'else', p[6])
+    else:
+        p[0] = ('if', p[2], p[4])
 
 def p_parameters(p):
     """parameters : NAME COMMA parameters

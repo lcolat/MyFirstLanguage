@@ -8,7 +8,11 @@ while a != 5 then a +=1; echo a;
 
 echo 'finish with a' + ' concat ' + '15';
 
-echo 'il reste à faire les if, else if, else';
+echo 'il reste à faire les else if';
+
+if a == 1 then echo 'yolo'; else echo 'nono';
+
+
 echo 'print dans graphviz !'
 echo 'et des trucs fun';
 
