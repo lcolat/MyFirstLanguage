@@ -263,15 +263,20 @@ def eval_expression(t):
     elif op == 'if':
         if eval(t[1]):
             eval(t[2])
+        elif eval(t[3]):
+            pass
         else:
-            if not eval(t[3]):
-                eval(t[4])
+            eval(t[4])
 
     elif op == 'elif':
         if eval(t[1]):
             eval(t[2])
-        else:
-            eval(t[3])
+            return True
+        elif len(t[3]) != 0:
+            if eval(t[3]):
+                return True
+
+        return False
 
     elif op == 'else':
         eval(t[1])
@@ -383,10 +388,11 @@ def p_statement_for(p):
     """statement : FOR statement SEMICOLON expression THEN block"""
     p[0] = ('for', p[2], p[4], p[6])
 
-#  FAIRE LES IF ELIF ELSE SUR UNE SEULE LIGNE == PLUS SIMPLE
+
 def p_statement_if(p):
     """statement : IF expression THEN block elif_statement else_statement"""
     p[0] = ('if', p[2], p[4], p[5], p[6])
+
 
 def p_statement_elif(p):
     """elif_statement : ELIF expression THEN block elif_statement
@@ -395,6 +401,7 @@ def p_statement_elif(p):
         p[0] = ('elif', p[2], p[4], p[5])
     else:
         p[0] = []
+
 
 def p_statement_else(p):
     """else_statement : ELSE block

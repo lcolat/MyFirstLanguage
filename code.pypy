@@ -10,11 +10,13 @@ echo 'finish with a' + ' concat ' + 15;
 echo 'finish with a' + ' concat ' + '15';
 
 echo 'il reste à faire les else if';
-b = 2;
-if a == 1 then echo 'if ok'; elif b == 2 then echo 'elif ok'; else echo 'else ok';
+b = 4;
 
 
-echo 'print dans graphviz !'
+if a == 4 then echo 'if ok'; elif b == 3 then echo 'elif ok'; elif b == 4 then echo 'elif 2 ok'; else echo 'else ok';
+
+
+echo 'print dans graphviz !';
 echo 'et des trucs fun';
 echo 'boolean check ' + ((a == 5) && (true != false));
 
