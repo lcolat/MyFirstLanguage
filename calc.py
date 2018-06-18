@@ -263,8 +263,18 @@ def eval_expression(t):
     elif op == 'if':
         if eval(t[1]):
             eval(t[2])
-        elif len(t) == 5:
-            eval(t[4])
+        else:
+            if not eval(t[3]):
+                eval(t[4])
+
+    elif op == 'elif':
+        if eval(t[1]):
+            eval(t[2])
+        else:
+            eval(t[3])
+
+    elif op == 'else':
+        eval(t[1])
 
     elif op == 'echo':
         if t[1] == '__names':
@@ -375,12 +385,24 @@ def p_statement_for(p):
 
 #  FAIRE LES IF ELIF ELSE SUR UNE SEULE LIGNE == PLUS SIMPLE
 def p_statement_if(p):
-    """statement : IF expression THEN block ELSE block
-                 | IF expression THEN block"""
-    if len(p) == 7:
-        p[0] = ('if', p[2], p[4], 'else', p[6])
+    """statement : IF expression THEN block elif_statement else_statement"""
+    p[0] = ('if', p[2], p[4], p[5], p[6])
+
+def p_statement_elif(p):
+    """elif_statement : ELIF expression THEN block elif_statement
+                      | empty"""
+    if p[1] is not None:
+        p[0] = ('elif', p[2], p[4], p[5])
     else:
-        p[0] = ('if', p[2], p[4])
+        p[0] = []
+
+def p_statement_else(p):
+    """else_statement : ELSE block
+                      | empty"""
+    if p[1] is not None:
+        p[0] = ('else', p[2])
+    else:
+        p[0] = []
 
 def p_parameters_declaration(p):
     """parameters_declaration : empty
