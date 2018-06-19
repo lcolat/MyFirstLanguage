@@ -9,7 +9,6 @@ echo 'finish with a' + ' concat ' + 15;
 
 echo 'finish with a' + ' concat ' + '15';
 
-echo 'il reste à faire les else if';
 b = 4;
 
 
