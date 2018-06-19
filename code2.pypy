@@ -1,1 +1,3 @@
 echo 'Bienvenue dans code2.pypy';
+
+for [i = 0; i < 5, i += 1;] then echo 'for : ' + i;

@@ -5,12 +5,14 @@ import ply.lex as lex
 import uuid
 import graphviz as gv
 
+
 def printTreeGraph(t):
     graph = gv.Digraph(format='pdf')
     graph.attr('node', shape='circle')
     addNode(graph, t)
     #graph.render(filename='img/graph') #Pour Sauvegarder
     graph.view() #Pour afficher
+
 
 def addNode(graph, t):
     myId = uuid.uuid4()
@@ -20,10 +22,12 @@ def addNode(graph, t):
         return myId
 
     graph.node(str(myId), label=str(t[0]))
-    graph.edge(str(myId), str(addNode(graph, t[1])), arrowsize='0')
-    graph.edge(str(myId), str(addNode(graph, t[2])), arrowsize='0')
+
+    for edge in t[1:]:
+        graph.edge(str(myId), str(addNode(graph, edge)), arrowsize='0')
 
     return myId
+
 
 reserved = {
     'echo': 'ECHO',
@@ -279,10 +283,11 @@ def eval_expression(t):
         while eval(t[1]):
             eval(t[2])
 
-    elif op == 'for':  # FOR statement TO expression THEN block
-        start = eval(t[1])
+    elif op == 'for':  # FOR [i = 0; i < 10; i += 1] THEN block
+        eval(t[1])
 
-        for i in range(start, eval(t[2])):
+        while eval(t[2]):
+            eval(t[4])
             eval(t[3])
 
     elif op == 'if':
@@ -374,17 +379,22 @@ def eval(t):
     return t
 
 
+program = ['main']
+
+
 def p_program(p):
     """program : program block
              | block"""
 
-    if len(p) == 2:
-        eval(p[1])
+    global program
+
+    program += (p[1],)
+
+    eval(p[1])
 
 
 def p_block(p):
     """block : block statement
-
              | statement"""
 
     if len(p) == 3:
@@ -392,7 +402,6 @@ def p_block(p):
     else:
         p[0] = p[1]
 
-    printTreeGraph(p[0])
 
 def p_empty(p):
     'empty :'
@@ -415,8 +424,8 @@ def p_statement_while(p):
 
 
 def p_statement_for(p):
-    """statement : FOR statement SEMICOLON expression THEN block"""
-    p[0] = ('for', p[2], p[4], p[6])
+    """statement : FOR LBRACKET statement expression COMMA statement RBRACKET THEN block"""
+    p[0] = ('for', p[3], p[4], p[6], p[9])
 
 
 def p_statement_if(p):
@@ -561,3 +570,8 @@ yacc.yacc()
 with open('code.pypy') as file:
     for line in file:
         yacc.parse(line)
+
+
+program[1] = tuple(program[1])
+
+printTreeGraph(tuple(program))
