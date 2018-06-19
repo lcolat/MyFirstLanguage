@@ -9,7 +9,8 @@ reserved = {
     'if': 'IF',
     'elif': 'ELIF',
     'else': 'ELSE',
-    'function': 'FUNCTION'
+    'function': 'FUNCTION',
+    'import': 'IMPORT',
 }
 
 operators = {
@@ -325,8 +326,12 @@ def eval_expression(t):
 
             return res
         else:
-            # TODO : Error handling
             return None
+
+    elif op == 'import':
+        with open(t[1] + '.pypy') as imported_file:
+            for imported_line in imported_file:
+                yacc.parse(imported_line)
 
 
 def eval(t):
@@ -410,6 +415,13 @@ def p_statement_else(p):
         p[0] = ('else', p[2])
     else:
         p[0] = []
+
+
+def p_statement_import(p):
+    """statement : IMPORT NAME SEMICOLON"""
+
+    p[0] = ('import', p[2])
+
 
 def p_parameters_declaration(p):
     """parameters_declaration : empty
@@ -519,7 +531,7 @@ def p_error(p):
         print("Erreur de syntaxe à la ligne %s" % p.lineno, p)
 
 
-parser = yacc.yacc()
+yacc.yacc()
 
 with open('code.pypy') as file:
     for line in file:

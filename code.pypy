@@ -36,3 +36,5 @@ echo 'b outter scope = ' + b;
 echo c;
 
 superFunction[6, 7, 8];
+
+import code2;
